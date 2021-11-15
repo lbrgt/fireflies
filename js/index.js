@@ -25,9 +25,7 @@ var NUM_FIREFLIES,
 	MOUSE_RADIUS;
 
 var _resetConstants = function(){
-	var area = window.innerWidth * window.innerHeight;
-	NUM_FIREFLIES = Math.round(area * (150)/(1280*600)); // 150 fireflies per 1280x600
-	if(NUM_FIREFLIES<100) NUM_FIREFLIES=100; // actually, MINUMUM 100
+	NUM_FIREFLIES=250; 
 	
 	FLY_LOOP = 50;
 	FLY_SWERVE = 0.1;
@@ -120,15 +118,18 @@ THE FIREFLY CODE
 function Firefly(){
 
 	var self = this;
-
+	var boxwidth = app.renderer.width; 
+	var boxheight = app.renderer.height;
+	var marginwidth = 0.25*boxwidth; 
+	var marginheight = 0.15*boxheight;
 	// Graphics
 	self.graphics = new PIXI.Container();
 	var g = self.graphics;
 	g.scale.set(0.15);
 
 	// Random spot
-	self.x = Math.random()*app.renderer.width;
-	self.y = Math.random()*app.renderer.height;
+	self.x = Math.random()*(boxwidth-2*marginwidth)+marginwidth;
+	self.y = Math.random()*(boxheight-2*marginheight)+marginheight;
 	self.angle = Math.random()*Math.TAU;
 	self.speed = 0.5 + Math.random()*1;
 	self.swerve = (Math.random()-0.5)*FLY_SWERVE;
@@ -199,10 +200,11 @@ function Firefly(){
 		self.y += self.speed * delta * Math.sin(self.angle);
 
 		// Loop around
-		if(self.x<-FLY_LOOP) self.x=app.renderer.width+FLY_LOOP;
-		if(self.x>app.renderer.width+FLY_LOOP) self.x=-FLY_LOOP;
-		if(self.y<-FLY_LOOP) self.y=app.renderer.height+FLY_LOOP;
-		if(self.y>app.renderer.height+FLY_LOOP) self.y=-FLY_LOOP;
+		if(self.x<marginwidth-FLY_LOOP) self.x=boxwidth - marginwidth +FLY_LOOP;
+		if(self.x>boxwidth - marginwidth + FLY_LOOP) self.x = marginwidth - FLY_LOOP;
+
+		if(self.y<marginheight-FLY_LOOP) self.y=boxheight - marginheight +FLY_LOOP;
+		if(self.y>boxheight - marginheight + FLY_LOOP) self.y = marginheight - FLY_LOOP;
 
 		// Swerve
 		self.angle += self.swerve;
