@@ -46,6 +46,7 @@ THE MAIN GAME CODE
 
 var app;
 var fireflies = [];
+var leaders= [];
 window.onload = function(){
 
 	// Create app!
@@ -61,8 +62,14 @@ window.onload = function(){
 		// Add fireflies!
 		_addFireflies(NUM_FIREFLIES);
 
+		// Add Leaders 
+		_addLeaders(1);
+
 		// Animation loop
 		app.ticker.add(function(delta){
+			for(var i = 0; i<leaders.length; i++){
+				leaders[i].update(delta);
+			}
 			for(var i=0; i<fireflies.length; i++){
 				fireflies[i].update(delta);
 			}
@@ -94,6 +101,20 @@ var _addFireflies = function(num){
 	}
 };
 
+var _addLeaders = function(num){
+	for(var i = 0; i<num; i++){
+		console.log("adding leader");
+		var ff = new Leader();
+		leaders.push(ff);
+		console.log("push ff");
+		var g = ff.graphics;
+		console.log("ff grapjhics "+g);
+		app.stage.addChild(ff.graphics);
+		console.log("app stage");
+	}
+	console.log("add leader")
+}
+
 var _removeFireflies = function(num){
 	for(var i=0; i<num; i++){
 		var ff = fireflies.pop();
@@ -120,7 +141,7 @@ function Firefly(){
 	var boxwidth = app.renderer.width; 
 	var boxheight = app.renderer.height;
 	var marginwidth = 0.25*boxwidth; 
-	var marginheight = 0.15*boxheight;
+	var marginheight = 0.25*boxheight;
 	// Graphics
 	self.graphics = new PIXI.Container();
 	var g = self.graphics;
@@ -268,6 +289,77 @@ function Firefly(){
 	};
 	self.update(0);
 
+}
+// @ts-check
+function Leader(){
+	
+	var self = this;
+	// Graphics
+	self.graphics = new PIXI.Container();
+	var g = self.graphics;
+	g.scale.set(0.5);
+	// Clock
+	var clock = new PIXI.Container();
+	clock.visible = true;
+	g.addChild(clock);
+
+
+	// Flash
+	var flash = _makeMovieClip("firefly", {anchorX:0.5, anchorY:0.5});
+	flash.gotoAndStop(2);
+	flash.alpha = 0;
+	g.addChild(flash)
+	
+	// Dark Clock
+	var darkClock = new PIXI.Container();
+	clock.addChild(darkClock);
+	var darkClockBody = _makeMovieClip("firefly", {anchorX:0.5, anchorY:0.5});
+	darkClockBody.gotoAndStop(7);
+	darkClock.addChild(darkClockBody);
+	var darkClockHand = _makeMovieClip("firefly", {anchorX:0.5, anchorY:0.5});
+	darkClockHand.gotoAndStop(8);
+	darkClock.addChild(darkClockHand);
+
+	// Light Clock
+	var lightClock = new PIXI.Container();
+	lightClock.alpha = 0;
+	clock.addChild(lightClock);
+	var lightClockBody = _makeMovieClip("firefly", {anchorX:0.5, anchorY:0.5});
+	lightClockBody.gotoAndStop(5);
+	lightClock.addChild(lightClockBody);
+	var lightClockHand = _makeMovieClip("firefly", {anchorX:0.5, anchorY:0.5});
+	lightClockHand.gotoAndStop(6);
+	lightClock.addChild(lightClockHand);
+	
+	self.x = app.renderer.width/2;
+	self.y = 0.15*app.renderer.height;
+	self.angle = 0;
+	self.clock = 0; 
+
+	self.update = function(delta){
+		// Position
+		g.x = self.x;
+		g.y = self.y;
+		g.rotation = self.angle+Math.TAU/4;
+		// Increment cycle
+		
+		flash.alpha *= 0.9;
+		self.clock += (delta/60)*FLY_CLOCK_SPEED;
+		
+		if(self.clock>1){
+
+			// Flash!
+			flash.alpha = 1;
+			self.clock = 0;
+		}
+		lightClock.alpha = flash.alpha;
+
+		// Clocks!
+		clock.rotation = -g.rotation;
+		clock.visible = true;
+		darkClockHand.rotation = lightClockHand.rotation = self.clock*Math.TAU;
+	}
+	self.update(0);
 }
 
 /******************************
