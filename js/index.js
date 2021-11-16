@@ -26,7 +26,6 @@ var NUM_FIREFLIES,
 
 var _resetConstants = function(){
 	NUM_FIREFLIES=250; 
-	
 	FLY_LOOP = 50;
 	FLY_SWERVE = 0.1;
 	SHOW_CLOCKS = false;
@@ -305,6 +304,7 @@ var _syncConstants = function(){
 	publish("toggle/neighborNudgeRule", [FLY_SYNC]);
 	publish("slider/nudgeAmount", [FLY_PULL]);
 	publish("slider/neighborRadius", [FLY_RADIUS]);
+	publish("slider/changeSwerve",[FLY_SWERVE]);
 
 };
 
@@ -351,6 +351,11 @@ subscribe("slider/nudgeAmount", function(value){
 });
 subscribe("slider/neighborRadius", function(value){
 	FLY_RADIUS = value;
+});
+
+// Increase Speed 
+subscribe("slider/changeSwerve",function(value){
+	FLY_SWERVE = value;
 });
 
 // Reset Everything
