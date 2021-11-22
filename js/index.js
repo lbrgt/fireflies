@@ -22,7 +22,11 @@ var NUM_FIREFLIES,
 	FLY_RADIUS,
 	FLY_PULL,
 	FLY_SYNC,
-	MOUSE_RADIUS;
+	MOUSE_RADIUS,
+	FLY_SYNC_CENTRALIZED,
+	LEADER_RADIUS;
+
+var boxwidth,boxheight,marginwidth,marginheight;
 
 var _resetConstants = function(){
 	NUM_FIREFLIES=250; 
@@ -33,6 +37,8 @@ var _resetConstants = function(){
 	FLY_RADIUS = 200;
 	FLY_PULL = 0.035;
 	FLY_SYNC = false;
+	FLY_SYNC_CENTRALIZED = false;
+	LEADER_RADIUS = 10000;
 	MOUSE_RADIUS = 200;
 };
 
@@ -50,7 +56,8 @@ var leaders= [];
 window.onload = function(){
 
 	// Create app!
-	app = new PIXI.Application(document.body.clientWidth, document.body.clientHeight, {backgroundColor:0x000000});
+	app = new PIXI.Application(document.body.clientWidth, document.body.clientHeight, {autoResize: true, backgroundColor:0x000000});
+	
 	$("#game").appendChild(app.view);
 
 	// Mouse
@@ -77,6 +84,7 @@ window.onload = function(){
 
 		// Synchronize 'em!
 		_syncConstants();
+		resize();
 
 	});
 
@@ -129,6 +137,39 @@ var _resetFireflies = function(){
 	}	
 };
 
+
+function resize(){
+
+	boxwidth = app.renderer.width; 
+	boxheight = app.renderer.height;
+	marginwidth = 0.3*boxwidth; 
+	marginheight = 0.3*boxheight;
+	
+	for(var i = 0 ; i< fireflies.length; i ++){
+		var ff = fireflies[i];
+		ff.x = Math.random()*(boxwidth-marginwidth)+marginwidth;
+		ff.y = Math.random()*(boxheight-marginheight)+marginheight;
+	}
+
+	for(var i =0 ; i< leaders.length; i++){
+		var l = leaders[i];
+		l.x = (boxwidth-marginwidth)/2+marginwidth; 
+		l.y = marginheight;
+	}
+
+	console.log("resize");
+	const parent = document.body;
+	//Resize the renderer
+	app.renderer.resize(parent.clientWidth,parent.clientHeight);
+	// You can use the 'screen' property as the renderer visible
+  	// area, this is more useful than view.width/height because
+  	// it handles resolution
+  	//rect.position.set(app.screen.width, app.screen.height);
+	  console.log("resize to "+ parent.clientHeight);
+}
+
+// Listen for window resize events
+window.addEventListener('resize', resize);
 /******************************
 
 THE FIREFLY CODE
@@ -138,18 +179,14 @@ THE FIREFLY CODE
 function Firefly(){
 
 	var self = this;
-	var boxwidth = app.renderer.width; 
-	var boxheight = app.renderer.height;
-	var marginwidth = 0.25*boxwidth; 
-	var marginheight = 0.25*boxheight;
 	// Graphics
 	self.graphics = new PIXI.Container();
 	var g = self.graphics;
 	g.scale.set(0.15);
 
 	// Random spot
-	self.x = Math.random()*(boxwidth-2*marginwidth)+marginwidth;
-	self.y = Math.random()*(boxheight-2*marginheight)+marginheight;
+	self.x = Math.random()*(boxwidth-marginwidth)+marginwidth;
+	self.y = Math.random()*(boxheight-marginheight)+marginheight;
 	self.angle = Math.random()*Math.TAU;
 	self.speed = 0.5 + Math.random()*1;
 	self.swerve = (Math.random()-0.5)*FLY_SWERVE;
@@ -220,11 +257,11 @@ function Firefly(){
 		self.y += self.speed * delta * Math.sin(self.angle);
 
 		// Loop around
-		if(self.x<marginwidth-FLY_LOOP) self.x=boxwidth - marginwidth +FLY_LOOP;
-		if(self.x>boxwidth - marginwidth + FLY_LOOP) self.x = marginwidth - FLY_LOOP;
+		if(self.x<marginwidth-FLY_LOOP) self.x=boxwidth  +FLY_LOOP;
+		if(self.x>boxwidth + FLY_LOOP) self.x = marginwidth - FLY_LOOP;
 
-		if(self.y<marginheight-FLY_LOOP) self.y=boxheight - marginheight +FLY_LOOP;
-		if(self.y>boxheight - marginheight + FLY_LOOP) self.y = marginheight - FLY_LOOP;
+		if(self.y<marginheight-FLY_LOOP) self.y=boxheight +FLY_LOOP;
+		if(self.y>boxheight + FLY_LOOP) self.y = marginheight - FLY_LOOP;
 
 		// Swerve
 		self.angle += self.swerve;
@@ -264,7 +301,6 @@ function Firefly(){
 					}
 				}
 			}
-
 		}
 		body2.alpha = flash.alpha;
 		lightClock.alpha = flash.alpha;
@@ -351,6 +387,15 @@ function Leader(){
 			// Flash!
 			flash.alpha = 1;
 			self.clock = 0;
+
+			if(FLY_SYNC_CENTRALIZED){
+				for(var i = 0; i < fireflies.length;i++){
+					var ff = fireflies[i];
+					if(closeEnough(self,ff,LEADER_RADIUS)){
+						ff.clock = 1; 
+					}
+				}
+			}
 		}
 		lightClock.alpha = flash.alpha;
 
@@ -397,6 +442,8 @@ var _syncConstants = function(){
 	publish("slider/nudgeAmount", [FLY_PULL]);
 	publish("slider/neighborRadius", [FLY_RADIUS]);
 	publish("slider/changeSwerve",[FLY_SWERVE]);
+
+	publish("toggle/followLeader",[FLY_SYNC_CENTRALIZED]);
 
 };
 
@@ -460,4 +507,8 @@ subscribe("button/resetEverything", function(){
 	_resetConstants();
 	_syncConstants();
 	_resetFireflies();
+});
+
+subscribe("toggle/followLeader", function (value){
+	FLY_SYNC_CENTRALIZED = value;
 });
