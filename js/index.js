@@ -29,7 +29,7 @@ var NUM_FIREFLIES,
 	LEADER_RADIUS,
 	CHAOS_ON;
 
-var boxwidth,boxheight,marginwidth,marginheight;
+var boxwidth,boxheight,marginwidth,marginheight, elapsedTime, prevflashingFF, flashingFF;
 
 var _resetConstants = function(){
 	NUM_FIREFLIES=250; 
@@ -46,6 +46,7 @@ var _resetConstants = function(){
 	CHAOS_ON = false;
 	LEADER_RADIUS = 200;
 	MOUSE_RADIUS = 200;
+	flashingFF = 0; 
 };
 
 _resetConstants();
@@ -59,9 +60,11 @@ THE MAIN GAME CODE
 var app;
 var fireflies = [];
 var leaders= [];
-
+var timeContainer; 
 window.onload = function(){
 
+	elapsedTime = 0; 
+	flashingFF = 0; 
 	// Create app!
 	app = new PIXI.Application(document.body.clientWidth, document.body.clientHeight, {autoResize: true, backgroundColor:0x000000});
 	
@@ -79,14 +82,23 @@ window.onload = function(){
 		// Add Leaders 
 		_addLeaders(1);
 
+		timeContainer = new TimeText();
+		app.stage.addChild(timeContainer.graphics);
+
 		// Animation loop
 		app.ticker.add(function(delta){
+			prevflashingFF = flashingFF;
+			flashingFF = 0; 
 			for(var i = 0; i<leaders.length; i++){
 				leaders[i].update(delta);
 			}
 			for(var i=0; i<fireflies.length; i++){
 				fireflies[i].update(delta);
+				if(fireflies[i].clock == 0) flashingFF+=1; 
 			}
+			flashingFF = Math.max(flashingFF, prevflashingFF);
+			timeContainer.update(delta);
+			//elapsedTime = app.ticker.lastTime/1000;
 		});
 
 		// Synchronize 'em!
@@ -107,6 +119,10 @@ window.onload = function(){
 	Widgets.convert($("#words"));
 
 };
+
+function pad2(number) {
+	return (number < 10 ? '0' : '') + number;
+}
 
 var _addFireflies = function(num){
 	for(var i=0; i<num; i++){
@@ -138,6 +154,9 @@ var _resetFireflies = function(){
 	}	
 };
 
+var _resetTimer = function(){
+	elapsedTime = app.ticker.lastTime/1000;
+}
 
 function resize(){
 	//Resize the renderer
@@ -159,6 +178,47 @@ function resize(){
 		var l = leaders[i];
 		l.x = (boxwidth-marginwidth)/2+marginwidth; 
 		l.y = marginheight;
+	}
+}
+
+
+/****************
+ * Text
+ ***************/
+
+function TimeText(){
+	var self = this; 
+	self.graphics = new PIXI.Graphics();
+	self.time = elapsedTime;
+
+	const style = new PIXI.TextStyle({
+		fontFamily: 'Arial',
+		fontSize: 30,
+		fontStyle: 'italic',
+		//fontWeight: 'bold',
+		fill: '#FFFFFF', // gradient
+		stroke: '#000000',
+		strokeThickness: 5,
+		dropShadow: false,
+		dropShadowColor: '#000000',
+		dropShadowBlur: 0,
+		dropShadowAngle: Math.PI / 6,
+		dropShadowDistance: 6,
+		wordWrap: true,
+		wordWrapWidth: app.renderer.width/2,
+		lineJoin: 'round',
+	});
+
+	var timeText = new PIXI.Text(pad2(parseInt(self.time/60))+':'+pad2(parseInt(self.time%60)),style);
+	timeText.x = app.renderer.width/2;
+	timeText.y = 0;
+	timeText.color = 0;
+	self.graphics.addChild(timeText);
+	self.update = function(delta){
+		self.time = app.ticker.lastTime/1000 - elapsedTime;
+		timeText.text = 'Time:  ' + pad2(parseInt(self.time/60))+':'+pad2(parseInt(self.time%60))+ ', Maximum flashing fireflies together:  '+ parseInt(100*(flashingFF/fireflies.length))+' % ';
+		timeText.x = app.renderer.width/2;
+		style.wordWrapWidth = app.renderer.width/2
 	}
 }
 
@@ -282,7 +342,10 @@ function Firefly(){
 		self.clock += (delta/60)*FLY_CLOCK_SPEED;
 
 		// If near mouse, get chaotic, and fast!
-		if(Mouse.pressed && CHAOS_ON) _chaos=1;
+		if(Mouse.pressed && CHAOS_ON) {
+			flashingFF = 0 ; 
+			_chaos=1;
+		}
 		if(_chaos>0.01 && closeEnough(self,Mouse,MOUSE_RADIUS)){
 			self.clock += Math.random()*0.15;
 		}
@@ -571,6 +634,7 @@ subscribe("button/resetEverything", function(){
 	_resetConstants();
 	_syncConstants();
 	_resetFireflies();
+	_resetTimer();
 });
 
 subscribe("button/addLeader",function(){
