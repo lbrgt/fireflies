@@ -205,6 +205,46 @@ to play around with these virtual fireflies:
 		label-on="ON" label-off="OFF">
 	</widget>
 
+	<widget type="button"
+		id="addLeader"
+		background="#000" color="#fff"
+		background-hover="#FEE27F" color-hover="#000"
+
+		label="Add Leader">
+	</widget>
+
+
+	<widget type="slider"
+		id="nudgeAmountLeader"
+		background="#FEE27F" color="#fff"
+		min="0.01" max="0.10" step="0.001"
+
+		label="How much to nudge clock forward:"
+		label-min="a bit" label-max="a lot">
+	</widget>
+
+<hr/>
+
+	<widget type="toggle"
+		id="followClock"
+		background="#000" color="#fff"
+		background-on="#FEE27F" color-on="#000"
+
+		label="Blink with the global clock"
+		label-on="ON" label-off="OFF">
+	</widget>
+
+	<widget type="slider"
+		id="leaderRadius"
+		background="#FEE27F" color="#fff"
+		min="0" max="1000" step="10"
+
+		label="Clock Seen Radius"
+		label-min="min" label-max="max">
+	</widget>
+
+<hr/>
+
 	<!-- TRANSLATE: 'label', 'label-min', and 'label-max' -->
 	<widget type="slider"
 		id="numFireflies"
@@ -213,16 +253,6 @@ to play around with these virtual fireflies:
 
 		label="Number of fireflies:"
 		label-min="10" label-max="500">
-	</widget>
-
-	<!-- TRANSLATE: 'label', 'label-on', and 'label-off' -->
-	<widget type="toggle"
-		id="showClocks"
-		background="#000" color="#fff"
-		background-on="#FEE27F" color-on="#000"
-
-		label="Show clocks:"
-		label-on="ON" label-off="OFF">
 	</widget>
 
 	<!-- TRANSLATE: 'label', 'label-min', and 'label-max' -->
@@ -235,6 +265,7 @@ to play around with these virtual fireflies:
 		label-min="slow" label-max="fast">
 	</widget>
 
+<hr/>
 	<!-- TRANSLATE: 'label', 'label-on', and 'label-off' -->
 	<widget type="toggle"
 		id="neighborNudgeRule"
@@ -265,6 +296,7 @@ to play around with these virtual fireflies:
 		label-min="nearby" label-max="faraway">
 	</widget>
 
+<hr/>
 	<!-- TRANSLATE: 'label', 'label-min', and 'label-max' -->
 	<widget type="slider"
 		id="changeSwerve"
@@ -275,6 +307,29 @@ to play around with these virtual fireflies:
 		label-min="none" label-max="max">
 	</widget>
 
+<hr/>
+
+
+<h2>Debug: </h2>
+
+	<!-- TRANSLATE: 'label', 'label-on', and 'label-off' -->
+	<widget type="toggle"
+		id="showClocks"
+		background="#000" color="#fff"
+		background-on="#FEE27F" color-on="#000"
+
+		label="Show clocks "
+		label-on="ON" label-off="OFF">
+	</widget>
+
+	<widget type="toggle"
+		id="chaosON"
+		background="#000" color="#fff"
+		background-on="#FEE27F" color-on="#000"
+
+		label="Add chaos by pressing mouse"
+		label-on="ON" label-off="OFF">
+	</widget>
 	<!-- TRANSLATE: 'label' -->
 	<widget type="button"
 		id="resetFireflies"

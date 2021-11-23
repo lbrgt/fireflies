@@ -201,3 +201,21 @@ function _addMouseEvents(target, onmousedown, onmousemove, onmouseup){
 	document.body.addEventListener("touchend",_onmouseup,false);
 
 }
+
+class Circle extends PIXI.Graphics {
+    constructor(x, y, rad, velocity, dir, color=null) {
+        super();
+        this.vx = velocity * Math.cos(dir);
+        this.vy = velocity * Math.sin(dir);
+        this.start_x = x;
+        this.start_y = y;
+        this.x = x;
+        this.y = y;
+        this.radius = rad;
+        this.velocity = velocity;
+        this.dir = dir;
+        this.color = 0xFF0000
+        // this.color = '#'+(Math.random() * 0xFFFFFF << 0).toString(16).padStart(6, '0');
+
+    }
+}

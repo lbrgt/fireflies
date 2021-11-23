@@ -21,10 +21,13 @@ var NUM_FIREFLIES,
 	FLY_CLOCK_SPEED,
 	FLY_RADIUS,
 	FLY_PULL,
+	FLY_PULL_LEADER,
 	FLY_SYNC,
 	MOUSE_RADIUS,
-	FLY_SYNC_CENTRALIZED,
-	LEADER_RADIUS;
+	FOLLOW_LEADER,
+	FOLLOW_CLOCK,
+	LEADER_RADIUS,
+	CHAOS_ON;
 
 var boxwidth,boxheight,marginwidth,marginheight;
 
@@ -36,9 +39,12 @@ var _resetConstants = function(){
 	FLY_CLOCK_SPEED = 0.3;
 	FLY_RADIUS = 200;
 	FLY_PULL = 0.035;
+	FLY_PULL_LEADER = 0.035;
 	FLY_SYNC = false;
-	FLY_SYNC_CENTRALIZED = false;
-	LEADER_RADIUS = 10000;
+	FOLLOW_LEADER = false;
+	FOLLOW_CLOCK = false;
+	CHAOS_ON = false;
+	LEADER_RADIUS = 200;
 	MOUSE_RADIUS = 200;
 };
 
@@ -53,6 +59,7 @@ THE MAIN GAME CODE
 var app;
 var fireflies = [];
 var leaders= [];
+
 window.onload = function(){
 
 	// Create app!
@@ -111,16 +118,10 @@ var _addFireflies = function(num){
 
 var _addLeaders = function(num){
 	for(var i = 0; i<num; i++){
-		console.log("adding leader");
 		var ff = new Leader();
 		leaders.push(ff);
-		console.log("push ff");
-		var g = ff.graphics;
-		console.log("ff grapjhics "+g);
 		app.stage.addChild(ff.graphics);
-		console.log("app stage");
 	}
-	console.log("add leader")
 }
 
 var _removeFireflies = function(num){
@@ -139,11 +140,14 @@ var _resetFireflies = function(){
 
 
 function resize(){
+	//Resize the renderer
+	const parent = document.body;
+	app.renderer.resize(parent.clientWidth,parent.clientHeight);
 
 	boxwidth = app.renderer.width; 
 	boxheight = app.renderer.height;
 	marginwidth = 0.3*boxwidth; 
-	marginheight = 0.3*boxheight;
+	marginheight = 0.2*boxheight;
 	
 	for(var i = 0 ; i< fireflies.length; i ++){
 		var ff = fireflies[i];
@@ -156,16 +160,6 @@ function resize(){
 		l.x = (boxwidth-marginwidth)/2+marginwidth; 
 		l.y = marginheight;
 	}
-
-	console.log("resize");
-	const parent = document.body;
-	//Resize the renderer
-	app.renderer.resize(parent.clientWidth,parent.clientHeight);
-	// You can use the 'screen' property as the renderer visible
-  	// area, this is more useful than view.width/height because
-  	// it handles resolution
-  	//rect.position.set(app.screen.width, app.screen.height);
-	  console.log("resize to "+ parent.clientHeight);
 }
 
 // Listen for window resize events
@@ -242,11 +236,23 @@ function Firefly(){
 	lightClockHand.gotoAndStop(6);
 	lightClock.addChild(lightClockHand);
 
+	self.color = 16777215;
+	self.leaderShowClock = false;
+
 	// Mouse LAST pressed... a little decay...
 	var _chaos = 0;
 
 	// Update
 	self.update = function(delta){
+		body.tint = self.color; 
+		body2.tint = self.color;
+		wings.tint = self.color;
+		
+		clock.tint = self.color;
+		lightClock.tint = self.color;
+		darkClock.tint = self.color;
+		flash.tint = self.color;
+
 
 		//////////////////////
 		// Position & Angle //
@@ -276,7 +282,7 @@ function Firefly(){
 		self.clock += (delta/60)*FLY_CLOCK_SPEED;
 
 		// If near mouse, get chaotic, and fast!
-		if(Mouse.pressed) _chaos=1;
+		if(Mouse.pressed && CHAOS_ON) _chaos=1;
 		if(_chaos>0.01 && closeEnough(self,Mouse,MOUSE_RADIUS)){
 			self.clock += Math.random()*0.15;
 		}
@@ -301,6 +307,17 @@ function Firefly(){
 					}
 				}
 			}
+			else if(FOLLOW_LEADER && self.leaderShowClock){
+				for(var i=0;i<fireflies.length;i++){
+					var ff = fireflies[i];
+					if(closeEnough(self,ff,10000)){ // is close enough?
+						var pull = (ff.clock/1); // to prevent double-pulling
+						ff.clock += pull*FLY_PULL;
+						if(ff.clock>1) ff.clock=1;
+					}
+				}
+			
+			}
 		}
 		body2.alpha = flash.alpha;
 		lightClock.alpha = flash.alpha;
@@ -319,13 +336,15 @@ function Firefly(){
 
 		// Clocks!
 		clock.rotation = -g.rotation;
-		clock.visible = SHOW_CLOCKS;
+		if(self.leaderShowClock) clock.visible = self.leaderShowClock;
+		else 		clock.visible = SHOW_CLOCKS;
 		darkClockHand.rotation = lightClockHand.rotation = self.clock*Math.TAU;
 
 	};
 	self.update(0);
 
 }
+
 // @ts-check
 function Leader(){
 	
@@ -333,7 +352,14 @@ function Leader(){
 	// Graphics
 	self.graphics = new PIXI.Container();
 	var g = self.graphics;
-	g.scale.set(0.5);
+	g.scale.set(0.4);
+	
+	//Radius of sync
+	c1 = new Circle(0,0,LEADER_RADIUS);
+	c1.lineStyle(3, 0xFFFF00);
+	c1.drawCircle(0,0,2*c1.radius);
+	g.addChild(c1);
+
 	// Clock
 	var clock = new PIXI.Container();
 	clock.visible = true;
@@ -373,6 +399,16 @@ function Leader(){
 	self.clock = 0; 
 
 	self.update = function(delta){
+		g.visible = FOLLOW_CLOCK;
+		if(!FOLLOW_CLOCK) return;
+		
+		if(c1.radius!=LEADER_RADIUS)
+		{
+			c1.radius = LEADER_RADIUS;
+			c1.clear();
+			c1.lineStyle(3, 0xFFFF00);
+			c1.drawCircle(0,0,2*c1.radius);		
+		}	
 		// Position
 		g.x = self.x;
 		g.y = self.y;
@@ -382,17 +418,25 @@ function Leader(){
 		flash.alpha *= 0.9;
 		self.clock += (delta/60)*FLY_CLOCK_SPEED;
 		
+		if(Mouse.pressed)
+		{
+			if(closeEnough(self,Mouse,50)){
+				self.x = Mouse.x; 
+				self.y = Mouse.y;
+			}
+		}
+
 		if(self.clock>1){
 
 			// Flash!
 			flash.alpha = 1;
 			self.clock = 0;
 
-			if(FLY_SYNC_CENTRALIZED){
+			if(FOLLOW_CLOCK){
 				for(var i = 0; i < fireflies.length;i++){
 					var ff = fireflies[i];
-					if(closeEnough(self,ff,LEADER_RADIUS)){
-						ff.clock = 1; 
+					if(closeEnough(self,ff,c1.radius)){
+						ff.clock = 1.1; 
 					}
 				}
 			}
@@ -443,9 +487,22 @@ var _syncConstants = function(){
 	publish("slider/neighborRadius", [FLY_RADIUS]);
 	publish("slider/changeSwerve",[FLY_SWERVE]);
 
-	publish("toggle/followLeader",[FLY_SYNC_CENTRALIZED]);
+	publish("toggle/followLeader",[FOLLOW_LEADER]);
+	publish("slider/nudgeAmountLeader", [FLY_PULL_LEADER]);
+	publish("toggle/followClock",[FOLLOW_CLOCK]);
+	publish("toggle/chaosON",[CHAOS_ON]);
+
+	publish("slider/leaderRadius", [LEADER_RADIUS]);
 
 };
+
+//Add Random Leader
+var _addRandomLeader = function(){
+	var i = Math.floor(Math.random() * (fireflies.length));
+	var ff = fireflies[i];
+	ff.color = 16711680;
+	ff.leaderShowClock = true;
+}
 
 // Num of Fireflies
 
@@ -458,10 +515,8 @@ subscribe("slider/numFireflies", function(value){
 	if(value < fireflies.length){
 		_removeFireflies(fireflies.length-value);
 	}
-
 	// Then make that the new constant.
 	NUM_FIREFLIES = value;
-
 });
 
 // Internal Clock
@@ -473,6 +528,10 @@ subscribe("slider/clockSpeed", function(value){
 	FLY_CLOCK_SPEED = value
 });
 
+
+subscribe("slider/leaderRadius", function(value){
+	LEADER_RADIUS = value
+});
 // Neighbor Nudge Rule
 
 subscribe("toggle/neighborNudgeRule", function(value){
@@ -497,6 +556,11 @@ subscribe("slider/changeSwerve",function(value){
 	FLY_SWERVE = value;
 });
 
+
+subscribe("toggle/chaosON", function(value){
+	CHAOS_ON = value;
+});
+
 // Reset Everything
 
 subscribe("button/resetFireflies", function(){
@@ -509,6 +573,37 @@ subscribe("button/resetEverything", function(){
 	_resetFireflies();
 });
 
+subscribe("button/addLeader",function(){
+	_addRandomLeader();
+}
+);
+
+
+subscribe("button/addLeaderClock",function(){
+	_addLeaders(1);
+}
+);
+
 subscribe("toggle/followLeader", function (value){
-	FLY_SYNC_CENTRALIZED = value;
+	FOLLOW_LEADER = value;
+	if(FOLLOW_LEADER){
+		$("#nudgeAmountLeader").removeAttribute("inactive");
+		$("#addLeader").removeAttribute("inactive");
+	}else{
+		$("#nudgeAmountLeader").setAttribute("inactive","yes");
+		$("#addLeader").setAttribute("inactive","yes");
+		for(var i =0 ; i< fireflies.length; i++){
+			var ff = fireflies[i];
+			ff.leaderShowClock = false; 
+			ff.color = 16777215;
+		}
+	}
+});
+
+subscribe("toggle/followClock", function (value){
+	FOLLOW_CLOCK = value;
+});
+
+subscribe("slider/nudgeAmountLeader", function(value){
+	FLY_PULL_LEADER = value; 
 });
