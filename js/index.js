@@ -591,25 +591,20 @@ subscribe("slider/clockSpeed", function(value){
 	FLY_CLOCK_SPEED = value
 });
 
-
 subscribe("slider/leaderRadius", function(value){
-	LEADER_RADIUS = value
+	LEADER_RADIUS = value;
 });
-// Neighbor Nudge Rule
 
+// Neighbor Nudge Rule
 subscribe("toggle/neighborNudgeRule", function(value){
 	FLY_SYNC = value;
-	if(FLY_SYNC){
-		$("#nudgeAmount").removeAttribute("inactive");
-		$("#neighborRadius").removeAttribute("inactive");
-	}else{
-		$("#nudgeAmount").setAttribute("inactive","yes");
-		$("#neighborRadius").setAttribute("inactive","yes");
-	}
+	flySyncDependencies();
 });
+
 subscribe("slider/nudgeAmount", function(value){
 	FLY_PULL = value;
 });
+
 subscribe("slider/neighborRadius", function(value){
 	FLY_RADIUS = value;
 });
@@ -619,17 +614,17 @@ subscribe("slider/changeSwerve",function(value){
 	FLY_SWERVE = value;
 });
 
-
+// Chaos on or off
 subscribe("toggle/chaosON", function(value){
 	CHAOS_ON = value;
 });
 
-// Reset Everything
-
+// Reset Fireflies
 subscribe("button/resetFireflies", function(){
 	_resetFireflies();
 });
 
+//Reset everything 
 subscribe("button/resetEverything", function(){
 	_resetConstants();
 	_syncConstants();
@@ -639,21 +634,38 @@ subscribe("button/resetEverything", function(){
 
 subscribe("button/addLeader",function(){
 	_addRandomLeader();
-}
+	}
 );
 
-
 subscribe("button/addLeaderClock",function(){
-	_addLeaders(1);
-}
+		_addLeaders(1);
+	}
 );
 
 subscribe("toggle/followLeader", function (value){
 	FOLLOW_LEADER = value;
+	followLeaderDependencies();
+});
+
+subscribe("toggle/followClock", function (value){
+	FOLLOW_CLOCK = value;
+	followClockDependencies();
+});
+
+subscribe("slider/nudgeAmountLeader", function(value){
+	FLY_PULL_LEADER = value; 
+});
+
+var followLeaderDependencies = function(){
 	if(FOLLOW_LEADER){
 		$("#nudgeAmountLeader").removeAttribute("inactive");
 		$("#addLeader").removeAttribute("inactive");
-	}else{
+		FOLLOW_CLOCK = false; 
+		FLY_SYNC = false; 
+		publish("toggle/neighborNudgeRule", [FLY_SYNC]);
+		publish("toggle/followClock", [FOLLOW_CLOCK]);
+	}
+	else{
 		$("#nudgeAmountLeader").setAttribute("inactive","yes");
 		$("#addLeader").setAttribute("inactive","yes");
 		for(var i =0 ; i< fireflies.length; i++){
@@ -662,12 +674,31 @@ subscribe("toggle/followLeader", function (value){
 			ff.color = 16777215;
 		}
 	}
-});
+}
 
-subscribe("toggle/followClock", function (value){
-	FOLLOW_CLOCK = value;
-});
+var followClockDependencies = function(){
+	if(FOLLOW_CLOCK)
+		{
+			$("#leaderRadius").removeAttribute("inactive");
+			FOLLOW_LEADER = false; 
+			FLY_SYNC = false; 
+			publish("toggle/neighborNudgeRule", [FLY_SYNC]);
+			publish("toggle/followLeader", [FOLLOW_LEADER]);
+		}
+	else
+		$("#leaderRadius").setAttribute("inactive","yes");
+}
 
-subscribe("slider/nudgeAmountLeader", function(value){
-	FLY_PULL_LEADER = value; 
-});
+var flySyncDependencies = function(){
+	if(FLY_SYNC){
+		$("#nudgeAmount").removeAttribute("inactive");
+		$("#neighborRadius").removeAttribute("inactive");
+		FOLLOW_CLOCK = false; 
+		FOLLOW_LEADER = false; 
+		publish("toggle/followLeader", [FOLLOW_LEADER]);
+		publish("toggle/followClock", [FOLLOW_CLOCK]);
+	}else{
+		$("#nudgeAmount").setAttribute("inactive","yes");
+		$("#neighborRadius").setAttribute("inactive","yes");
+	}
+}

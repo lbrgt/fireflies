@@ -194,8 +194,37 @@ Here's a few more buttons &amp; sliders you can use,
 to play around with these virtual fireflies:
 </p>
 -->
-<hr/>
+	<!-- TRANSLATE: 'label', 'label-min', and 'label-max' -->
+	<widget type="slider"
+		id="numFireflies"
+		background="#FEE27F" color="#fff"
+		min=10 max=500 step=1
 
+		label="Number of fireflies:"
+		label-min="10" label-max="500">
+	</widget>
+	<hr/>
+	<!-- TRANSLATE: 'label', 'label-min', and 'label-max' -->
+	<widget type="slider"
+		id="clockSpeed"
+		background="#FEE27F" color="#fff"
+		min="0.2" max="2" step="0.05"
+
+		label="Fireflies' clock speed:"
+		label-min="slow" label-max="fast">
+	</widget>
+	<hr/>
+	<!-- TRANSLATE: 'label', 'label-min', and 'label-max' -->
+	<widget type="slider"
+		id="changeSwerve"
+		background="#FEE27F" color="#fff"
+		min=0 max=1 step=0.1
+
+		label="How much to change the direction of movement"
+		label-min="none" label-max="max">
+	</widget>
+
+<hr/>
 	<widget type="toggle"
 		id="followLeader"
 		background="#000" color="#fff"
@@ -222,9 +251,7 @@ to play around with these virtual fireflies:
 		label="How much to nudge clock forward:"
 		label-min="a bit" label-max="a lot">
 	</widget>
-
 <hr/>
-
 	<widget type="toggle"
 		id="followClock"
 		background="#000" color="#fff"
@@ -242,29 +269,6 @@ to play around with these virtual fireflies:
 		label="Clock Seen Radius"
 		label-min="min" label-max="max">
 	</widget>
-
-<hr/>
-
-	<!-- TRANSLATE: 'label', 'label-min', and 'label-max' -->
-	<widget type="slider"
-		id="numFireflies"
-		background="#FEE27F" color="#fff"
-		min=10 max=500 step=1
-
-		label="Number of fireflies:"
-		label-min="10" label-max="500">
-	</widget>
-
-	<!-- TRANSLATE: 'label', 'label-min', and 'label-max' -->
-	<widget type="slider"
-		id="clockSpeed"
-		background="#FEE27F" color="#fff"
-		min="0.2" max="2" step="0.05"
-
-		label="Fireflies' clock speed:"
-		label-min="slow" label-max="fast">
-	</widget>
-
 <hr/>
 	<!-- TRANSLATE: 'label', 'label-on', and 'label-off' -->
 	<widget type="toggle"
@@ -295,20 +299,6 @@ to play around with these virtual fireflies:
 		label="How close neighbor must be:"
 		label-min="nearby" label-max="faraway">
 	</widget>
-
-<hr/>
-	<!-- TRANSLATE: 'label', 'label-min', and 'label-max' -->
-	<widget type="slider"
-		id="changeSwerve"
-		background="#FEE27F" color="#fff"
-		min=0 max=1 step=0.1
-
-		label="How much to change the direction of movement"
-		label-min="none" label-max="max">
-	</widget>
-
-<hr/>
-
 
 <h2>Debug: </h2>
 
