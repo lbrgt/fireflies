@@ -47,6 +47,8 @@ var _resetConstants = function () {
 	LEADER_RADIUS = 200;
 	MOUSE_RADIUS = 200;
 	flashingFF = 0;
+	prevflashingFF = 0;
+	
 };
 
 _resetConstants();
@@ -62,13 +64,16 @@ var fireflies = [];
 var leaders = [];
 var timeContainer;
 
-var helpDict = {};
 var listHelpButton = ["helpLeader", "helpClock", "helpDecentralized"];
+
+var flashingFF = 0, 
+	prevflashingFF = 0;
 
 window.onload = function () {
 
 	elapsedTime = 0;
 	flashingFF = 0;
+	prevflashingFF = 0;
 	// Create app!
 	app = new PIXI.Application(document.body.clientWidth, document.body.clientHeight, { autoResize: true, backgroundColor: 0x000000 });
 
@@ -472,6 +477,8 @@ function Firefly() {
 		// If near mouse, get chaotic, and fast!
 		if (Mouse.pressed && CHAOS_ON) {
 			flashingFF = 0;
+			prevflashingFF = 0;
+			_resetTimer();
 			_chaos = 1;
 		}
 		if (_chaos > 0.01 && closeEnough(self, Mouse, MOUSE_RADIUS)) {
@@ -749,6 +756,11 @@ subscribe("toggle/chaosON", function (value) {
 // Reset Fireflies
 subscribe("button/resetFireflies", function () {
 	_resetFireflies();
+	flashingFF = 0;
+	prevflashingFF = 0;
+	_resetTimer();
+
+	
 });
 
 //Reset everything 
