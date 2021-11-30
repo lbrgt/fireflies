@@ -129,19 +129,16 @@ window.onload = function () {
 
 	// Set up widgets!
 	Widgets.convert($("#words"));
-
+	Widgets.convert($("#strategies"));
 };
 
 
 var _setHelpBoxes = function () {
 	for (var i = 0; i < listHelpButton.length; i++) {
-		//console.log(listHelpButton[i]);
+		// Initialize the boxes, but they are not displayed
 		buttonName = listHelpButton[i]
 
 		const image = document.querySelector("#" + buttonName);
-
-		console.log(textContent[buttonName])
-
 		const pixiHelpContainer = createHelpBox(content = textContent[buttonName]['content'], title = textContent[buttonName]['title'])
 
 		image.addEventListener("click", clickHelpCallback)
@@ -152,6 +149,7 @@ var _setHelpBoxes = function () {
 function createHelpBox(content, title) {
 	var helpContainer = new PIXI.Container()
 
+	//Create text container
 	const txtBox = new PIXI.Text();
 	txtBox.setText(content)
 	txtBox.style = new PIXI.TextStyle({
@@ -164,6 +162,7 @@ function createHelpBox(content, title) {
 		lineJoin: 'round',
 	});
 
+	//Create titile container
 	var titleText = new PIXI.Text(title,
 		{
 			fontFamily: 'Arial bold',
@@ -174,12 +173,11 @@ function createHelpBox(content, title) {
 		});
 
 	
-	// Fill background
+	// Fill help container's background
 	var boxBG = new PIXI.Graphics();
 	boxBG.beginFill(0x666666, 0.5);
 	boxBG.drawRect(0, 0, txtBox.width, txtBox.height + titleText.height);
 	boxBG.endFill();
-
 
 	// Set title position
 	titleText.position.x = boxBG.width / 2 - titleText.width / 2
@@ -187,7 +185,6 @@ function createHelpBox(content, title) {
 	// Set text box position
 	txtBox.x = 0
 	txtBox.y = titleText.height
-	
 	
 	// Set close button
 	let closeButton = PIXI.Sprite.from('help/close.png');
@@ -205,37 +202,34 @@ function createHelpBox(content, title) {
 	closeButton.position.y = 0
 	closeButton.position.x = boxBG.width - closeButton.width
 
-
+	// Add everything
 	helpContainer.addChild(boxBG)
 	helpContainer.addChild(closeButton);
 	helpContainer.addChild(txtBox)
-
 	helpContainer.addChild(titleText)
-
-
 	return helpContainer;
 }
 
 var clickHelpCallback = function (event) {
 	if (!event.currentTarget.clicked) {
 
+		//Get position of the help button
 		var imageRect = event.currentTarget.getBoundingClientRect();
-		console.log(imageRect.top, imageRect.right, imageRect.bottom, imageRect.left);
 
-		wordsRect = document.querySelector("#words").getBoundingClientRect();
-
+		//Get position of the strategies div
+		strategiesRect = document.querySelector("#strategies").getBoundingClientRect();
 		var box = event.currentTarget.helpTextBox.pixiHelpContainer;
+
+		// Set help box position, checking bottom limit
 		if (box.height + imageRect.top < app.renderer.height) {
 			box.y = imageRect.top;
 		} else {
 			box.y = app.renderer.height - box.height;
 		}
-		box.x = wordsRect.right;
+		box.x = strategiesRect.left - box.width;
 
-		console.log(box.height + imageRect.top, wordsRect.bottom, box.y, app.renderer.height);
-
+		//Can be deactivated by clicking again on it
 		event.currentTarget.clicked = true;
-
 		app.stage.addChild(box);
 	}
 	else {
@@ -298,8 +292,8 @@ function resize() {
 
 	boxwidth = app.renderer.width;
 	boxheight = app.renderer.height;
-	marginwidth = 0.3 * boxwidth;
-	marginheight = 0.2 * boxheight;
+	marginwidth = 0.1 * boxwidth;
+	marginheight = 0.1 * boxheight;
 
 	for (var i = 0; i < fireflies.length; i++) {
 		var ff = fireflies[i];
@@ -343,14 +337,15 @@ function TimeText() {
 	});
 
 	var timeText = new PIXI.Text(pad2(parseInt(self.time / 60)) + ':' + pad2(parseInt(self.time % 60)), style);
-	timeText.x = app.renderer.width / 2;
+	timeText.x = app.renderer.width / 2 - timeText.width/2 ;
+	
 	timeText.y = 0;
 	timeText.color = 0;
 	self.graphics.addChild(timeText);
 	self.update = function (delta) {
 		self.time = app.ticker.lastTime / 1000 - elapsedTime;
 		timeText.text = 'Time:  ' + pad2(parseInt(self.time / 60)) + ':' + pad2(parseInt(self.time % 60)) + ', Maximum flashing fireflies together:  ' + parseInt(100 * (flashingFF / fireflies.length)) + ' % ';
-		timeText.x = app.renderer.width / 2;
+		timeText.x = app.renderer.width / 2 - timeText.width/2 ;
 		style.wordWrapWidth = app.renderer.width / 2
 	}
 }
