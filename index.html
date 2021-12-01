@@ -136,6 +136,30 @@
 
 
 	</div>
+
+	<script src="/__/firebase/9.4.0/firebase-app-compat.js"></script>
+	<script src="/__/firebase/9.4.0/firebase-auth-compat.js"></script>
+	<script src="/__/firebase/9.4.0/firebase-storage-compat.js"></script>
+
+
+	<script type="module">  
+		const firebaseConfig = {
+		apiKey: "AIzaSyDLd3M2ypW-4X1xoiKKdAoJ2YkiJ5tDJWk",
+		authDomain: "cs411-7b955.firebaseapp.com",
+		projectId: "cs411-7b955",
+		storageBucket: "cs411-7b955.appspot.com",
+		messagingSenderId: "499614968746",
+		appId: "1:499614968746:web:7f3e5b94ad7dfcc70799d3",
+		measurementId: "G-6FC8W5ZS8Y"
+		};
+
+	// Initialize Firebase
+	const app = firebase.initializeApp(firebaseConfig);
+	//const analytics = getAnalytics(app);
+	console.log("init firebase");
+  
+  </script>
+
 </body>
 
 </html>
@@ -151,5 +175,7 @@
 <script src="help/text.js"></script>
 
 
+
+<script src ="js/firebase.js"></script>
 <!-- Main code -->
 <script src="js/index.js?v=2"></script>

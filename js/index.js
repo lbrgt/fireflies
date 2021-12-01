@@ -51,6 +51,15 @@ var _resetConstants = function () {
 	
 };
 
+let arrayHeader = ["Name","Country","Email"];
+let arrayData  = []  
+    arrayData[0] = { name : "Sigit", country : "Indonesia", email : "sigit@gmail.com"};
+    arrayData[1] = { name : "Joana", country : "Brazil", email : "Joana@gmail.com"};
+    arrayData[2] = { name : "Albert", country : "Mexico", email : "albert@gmail.com"};
+    arrayData[3] = { name : "Nuuna", country : "South Korea", email : "Nuuna@gmail.com"};
+    arrayData[4] = { name : "Aroon", country : "Irlandia", email : "aroon@gmail.com"};
+
+
 _resetConstants();
 
 /******************************
@@ -70,6 +79,7 @@ var flashingFF = 0,
 	prevflashingFF = 0;
 
 window.onload = function () {
+	writeFile('','testing.csv',export_csv(arrayHeader,arrayData,',',"testing.csv"));
 
 	elapsedTime = 0;
 	flashingFF = 0;
