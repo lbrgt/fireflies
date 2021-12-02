@@ -267,10 +267,17 @@ var clickHelpCallback = function (event) {
 		//Can be deactivated by clicking again on it
 		event.currentTarget.clicked = true;
 		app.stage.addChild(box);
+
+		// True when activated
+		logClick(event.target.id, True)
 	}
 	else {
 		app.stage.removeChild(event.currentTarget.helpTextBox.pixiHelpContainer);
 		event.currentTarget.clicked = false;
+
+		//False when deactivated
+		logClick(event.target.id, false)
+
 	}
 
 }
