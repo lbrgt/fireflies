@@ -73,7 +73,7 @@ var fireflies = [];
 var leaders = [];
 var timeContainer;
 
-var listHelpButton = ["helpLeader", "helpClock", "helpDecentralized"];
+var listHelpButton = ["helpLeader", "helpClock", "helpDecentralized", "helpDebug"];
 
 var flashingFF = 0, 
 	prevflashingFF = 0;
@@ -166,7 +166,7 @@ function createHelpBox(content, title) {
 		fontFamily: 'Arial',
 		fontSize: 24,
 		fill: "white",
-		align: 'center',
+		align: 'left',
 		wordWrap: true,
 		wordWrapWidth: 600,
 		lineJoin: 'round',
@@ -223,20 +223,32 @@ function createHelpBox(content, title) {
 var clickHelpCallback = function (event) {
 	if (!event.currentTarget.clicked) {
 
+		var parentId = event.originalTarget.offsetParent.id;
+
 		//Get position of the help button
 		var imageRect = event.currentTarget.getBoundingClientRect();
 
-		//Get position of the strategies div
-		strategiesRect = document.querySelector("#strategies").getBoundingClientRect();
 		var box = event.currentTarget.helpTextBox.pixiHelpContainer;
 
-		// Set help box position, checking bottom limit
+		// Set help box y position, checking bottom limit
 		if (box.height + imageRect.top < app.renderer.height) {
 			box.y = imageRect.top;
 		} else {
 			box.y = app.renderer.height - box.height;
 		}
-		box.x = strategiesRect.left - box.width;
+
+		if (parentId == 'strategies'){
+
+			//Get position of the strategies div
+			strategiesRect = document.querySelector("#strategies").getBoundingClientRect();
+			box.x = strategiesRect.left - box.width;
+		} else {
+
+			//Get position of the strategies div
+			wordsRect = document.querySelector("#words").getBoundingClientRect();
+			box.x = wordsRect.right;
+		}
+		
 
 		//Can be deactivated by clicking again on it
 		event.currentTarget.clicked = true;
@@ -354,7 +366,7 @@ function TimeText() {
 	self.graphics.addChild(timeText);
 	self.update = function (delta) {
 		self.time = app.ticker.lastTime / 1000 - elapsedTime;
-		timeText.text = 'Time:  ' + pad2(parseInt(self.time / 60)) + ':' + pad2(parseInt(self.time % 60)) + ', Maximum flashing fireflies together:  ' + parseInt(100 * (flashingFF / fireflies.length)) + ' % ';
+		timeText.text = 'Time elapsed:  ' + pad2(parseInt(self.time / 60)) + ':' + pad2(parseInt(self.time % 60)) + ', Maximum flashing fireflies together:  ' + parseInt(100 * (flashingFF / fireflies.length)) + ' % ';
 		timeText.x = app.renderer.width / 2 - timeText.width/2 ;
 		style.wordWrapWidth = app.renderer.width / 2
 	}
