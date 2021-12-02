@@ -299,7 +299,10 @@ var _removeFireflies = function (num) {
 	}
 };
 
+
+
 var _resetFireflies = function () {
+	_resetTimer();
 	for (var i = 0; i < fireflies.length; i++) {
 		var ff = fireflies[i];
 		ff.clock = Math.random();
@@ -308,6 +311,8 @@ var _resetFireflies = function () {
 
 var _resetTimer = function () {
 	elapsedTime = app.ticker.lastTime / 1000;
+	flashingFF = 0;
+	prevflashingFF = 0;
 }
 
 function resize() {
@@ -317,12 +322,12 @@ function resize() {
 
 	boxwidth = app.renderer.width;
 	boxheight = app.renderer.height;
-	marginwidth = 0.1 * boxwidth;
+	marginwidth = 0.2 * boxwidth + 100;
 	marginheight = 0.1 * boxheight;
 
 	for (var i = 0; i < fireflies.length; i++) {
 		var ff = fireflies[i];
-		ff.x = Math.random() * (boxwidth - marginwidth) + marginwidth;
+		ff.x = Math.random() * (boxwidth - 2*marginwidth) + marginwidth;
 		ff.y = Math.random() * (boxheight - marginheight) + marginheight;
 	}
 
@@ -392,7 +397,7 @@ function Firefly() {
 	g.scale.set(0.15);
 
 	// Random spot
-	self.x = Math.random() * (boxwidth - marginwidth) + marginwidth;
+	self.x = Math.random() * (boxwidth - 2*marginwidth) + marginwidth;
 	self.y = Math.random() * (boxheight - marginheight) + marginheight;
 	self.angle = Math.random() * Math.TAU;
 	self.speed = 0.5 + Math.random() * 1;
@@ -476,8 +481,8 @@ function Firefly() {
 		self.y += self.speed * delta * Math.sin(self.angle);
 
 		// Loop around
-		if (self.x < marginwidth - FLY_LOOP) self.x = boxwidth + FLY_LOOP;
-		if (self.x > boxwidth + FLY_LOOP) self.x = marginwidth - FLY_LOOP;
+		if (self.x < marginwidth - FLY_LOOP) self.x = boxwidth - marginwidth + FLY_LOOP;
+		if (self.x > boxwidth-marginwidth + FLY_LOOP) self.x = marginwidth - FLY_LOOP;
 
 		if (self.y < marginheight - FLY_LOOP) self.y = boxheight + FLY_LOOP;
 		if (self.y > boxheight + FLY_LOOP) self.y = marginheight - FLY_LOOP;
@@ -723,6 +728,7 @@ var _addRandomLeader = function () {
 // Num of Fireflies
 
 subscribe("slider/numFireflies", function (value) {
+	_resetFireflies();
 	logClick("numFireflies",value);
 
 	// Settle the difference...
@@ -744,50 +750,56 @@ subscribe("toggle/showClocks", function (value) {
 	SHOW_CLOCKS = value;
 });
 subscribe("slider/clockSpeed", function (value) {
+	_resetFireflies();
 	logClick("clockSpeed",value);
 	FLY_CLOCK_SPEED = value
 });
 
 subscribe("slider/leaderRadius", function (value) {
+	_resetFireflies();
 	logClick("leaderRadius",value);
 	LEADER_RADIUS = value;
 });
 
 // Neighbor Nudge Rule
 subscribe("toggle/neighborNudgeRule", function (value) {
+	_resetFireflies();
 	logClick("neighborNudgeRule",value);
 	FLY_SYNC = value;
 	flySyncDependencies();
 });
 
 subscribe("slider/nudgeAmount", function (value) {
+	_resetFireflies();
 	logClick("nudgeAmount",value);
 	FLY_PULL = value;
 });
 
 subscribe("slider/neighborRadius", function (value) {
+	_resetFireflies();
 	logClick("neighborRadius",value);
 	FLY_RADIUS = value;
 });
 
 // Increase Speed 
 subscribe("slider/changeSwerve", function (value) {
+	_resetFireflies();
 	logClick("changeSwerve",value);
 	FLY_SWERVE = value;
 });
 
 // Chaos on or off
 subscribe("toggle/chaosON", function (value) {
+	_resetFireflies();
 	CHAOS_ON = value;
 	logClick("chaosOn",value);
 });
 
 // Reset Fireflies
 subscribe("button/resetFireflies", function () {
+	
 	logClick("resetFireflies",'');
 	_resetFireflies();
-	flashingFF = 0;
-	prevflashingFF = 0;
 	_resetTimer();
 
 	
