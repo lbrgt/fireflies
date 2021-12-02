@@ -51,15 +51,14 @@ var _resetConstants = function () {
 	
 };
 
-let arrayHeader = ["Name","Country","Email"];
-let arrayData  = []  
-    arrayData[0] = { name : "Sigit", country : "Indonesia", email : "sigit@gmail.com"};
-    arrayData[1] = { name : "Joana", country : "Brazil", email : "Joana@gmail.com"};
-    arrayData[2] = { name : "Albert", country : "Mexico", email : "albert@gmail.com"};
-    arrayData[3] = { name : "Nuuna", country : "South Korea", email : "Nuuna@gmail.com"};
-    arrayData[4] = { name : "Aroon", country : "Irlandia", email : "aroon@gmail.com"};
+let arrayHeaderClicks = ["Timestamp","ButtonClicked","Value"];
+let arrayHeaderScores = ["Timestamp","Time","Percentage"];
 
-
+let arrayDataClicks  = [] 
+let arrayDataScores = [] 
+var arrayDataClicksCounter = 0;
+var arrayDataScoresCountere =0; 
+var foldername;
 _resetConstants();
 
 /******************************
@@ -78,12 +77,26 @@ var listHelpButton = ["helpLeader", "helpClock", "helpDecentralized", "helpDebug
 var flashingFF = 0, 
 	prevflashingFF = 0;
 
+window.onbeforeunload = function(e){
+	
+	writeFile(foldername,'clicks.csv',export_csv(arrayHeaderClicks,arrayDataClicks,','));
+	writeFile(foldername,'scores.csv',export_csv(arrayHeaderScores,arrayDataScores,','));
+	e.preventDefault(); // If you prevent default behavior in Mozilla Firefox prompt will always be shown
+	// Chrome requires returnValue to be set
+	e.returnValue = '';
+}
 window.onload = function () {
-	writeFile('','testing.csv',export_csv(arrayHeader,arrayData,',',"testing.csv"));
-
+	//Initialize! 
+	arrayDataClicksCounter = 0;
+	arrayDataScoresCounter = 0;  
+	foldername = new Date().toISOString(); // "2020-06-13T18:30:00.000Z"
+	foldername = foldername.split(':').join('-');
+	
 	elapsedTime = 0;
 	flashingFF = 0;
 	prevflashingFF = 0;
+
+	var timestamp =0; 
 	// Create app!
 	app = new PIXI.Application(document.body.clientWidth, document.body.clientHeight, { autoResize: true, backgroundColor: 0x000000 });
 
@@ -103,9 +116,7 @@ window.onload = function () {
 
 		timeContainer = new TimeText();
 		app.stage.addChild(timeContainer.graphics);
-
 		_setHelpBoxes()
-
 
 		// Animation loop 
 		app.ticker.add(function (delta) {
@@ -120,7 +131,11 @@ window.onload = function () {
 			}
 			flashingFF = Math.max(flashingFF, prevflashingFF);
 			timeContainer.update(delta);
-			//elapsedTime = app.ticker.lastTime/1000;
+			if(app.ticker.lastTime - timestamp >500) {
+				timestamp = app.ticker.lastTime;
+				arrayDataScores[arrayDataScoresCounter] = { Timestamp: new Date().toISOString() , Time : timeContainer.time, Percentage : parseInt(100 * (flashingFF / fireflies.length))};
+				arrayDataScoresCounter++;
+			}
 		});
 
 		// Synchronize 'em!
@@ -296,7 +311,10 @@ var _removeFireflies = function (num) {
 	}
 };
 
+
+
 var _resetFireflies = function () {
+	_resetTimer();
 	for (var i = 0; i < fireflies.length; i++) {
 		var ff = fireflies[i];
 		ff.clock = Math.random();
@@ -305,6 +323,8 @@ var _resetFireflies = function () {
 
 var _resetTimer = function () {
 	elapsedTime = app.ticker.lastTime / 1000;
+	flashingFF = 0;
+	prevflashingFF = 0;
 }
 
 function resize() {
@@ -314,12 +334,12 @@ function resize() {
 
 	boxwidth = app.renderer.width;
 	boxheight = app.renderer.height;
-	marginwidth = 0.1 * boxwidth;
+	marginwidth = 0.2 * boxwidth + 100;
 	marginheight = 0.1 * boxheight;
 
 	for (var i = 0; i < fireflies.length; i++) {
 		var ff = fireflies[i];
-		ff.x = Math.random() * (boxwidth - marginwidth) + marginwidth;
+		ff.x = Math.random() * (boxwidth - 2*marginwidth) + marginwidth;
 		ff.y = Math.random() * (boxheight - marginheight) + marginheight;
 	}
 
@@ -389,7 +409,7 @@ function Firefly() {
 	g.scale.set(0.15);
 
 	// Random spot
-	self.x = Math.random() * (boxwidth - marginwidth) + marginwidth;
+	self.x = Math.random() * (boxwidth - 2*marginwidth) + marginwidth;
 	self.y = Math.random() * (boxheight - marginheight) + marginheight;
 	self.angle = Math.random() * Math.TAU;
 	self.speed = 0.5 + Math.random() * 1;
@@ -473,8 +493,8 @@ function Firefly() {
 		self.y += self.speed * delta * Math.sin(self.angle);
 
 		// Loop around
-		if (self.x < marginwidth - FLY_LOOP) self.x = boxwidth + FLY_LOOP;
-		if (self.x > boxwidth + FLY_LOOP) self.x = marginwidth - FLY_LOOP;
+		if (self.x < marginwidth - FLY_LOOP) self.x = boxwidth - marginwidth + FLY_LOOP;
+		if (self.x > boxwidth-marginwidth + FLY_LOOP) self.x = marginwidth - FLY_LOOP;
 
 		if (self.y < marginheight - FLY_LOOP) self.y = boxheight + FLY_LOOP;
 		if (self.y > boxheight + FLY_LOOP) self.y = marginheight - FLY_LOOP;
@@ -720,6 +740,8 @@ var _addRandomLeader = function () {
 // Num of Fireflies
 
 subscribe("slider/numFireflies", function (value) {
+	_resetFireflies();
+	logClick("numFireflies",value);
 
 	// Settle the difference...
 	if (value > fireflies.length) {
@@ -736,45 +758,59 @@ subscribe("slider/numFireflies", function (value) {
 // Internal Clock
 
 subscribe("toggle/showClocks", function (value) {
+	logClick("showClocks",value);
 	SHOW_CLOCKS = value;
 });
 subscribe("slider/clockSpeed", function (value) {
+	_resetFireflies();
+	logClick("clockSpeed",value);
 	FLY_CLOCK_SPEED = value
 });
 
 subscribe("slider/leaderRadius", function (value) {
+	_resetFireflies();
+	logClick("leaderRadius",value);
 	LEADER_RADIUS = value;
 });
 
 // Neighbor Nudge Rule
 subscribe("toggle/neighborNudgeRule", function (value) {
+	_resetFireflies();
+	logClick("neighborNudgeRule",value);
 	FLY_SYNC = value;
 	flySyncDependencies();
 });
 
 subscribe("slider/nudgeAmount", function (value) {
+	_resetFireflies();
+	logClick("nudgeAmount",value);
 	FLY_PULL = value;
 });
 
 subscribe("slider/neighborRadius", function (value) {
+	_resetFireflies();
+	logClick("neighborRadius",value);
 	FLY_RADIUS = value;
 });
 
 // Increase Speed 
 subscribe("slider/changeSwerve", function (value) {
+	_resetFireflies();
+	logClick("changeSwerve",value);
 	FLY_SWERVE = value;
 });
 
 // Chaos on or off
 subscribe("toggle/chaosON", function (value) {
 	CHAOS_ON = value;
+	logClick("chaosOn",value);chaosON
 });
 
 // Reset Fireflies
 subscribe("button/resetFireflies", function () {
+	
+	logClick("resetFireflies",'');
 	_resetFireflies();
-	flashingFF = 0;
-	prevflashingFF = 0;
 	_resetTimer();
 
 	
@@ -782,35 +818,48 @@ subscribe("button/resetFireflies", function () {
 
 //Reset everything 
 subscribe("button/resetEverything", function () {
+	logClick("resetEverything",'');
 	_resetConstants();
 	_syncConstants();
 	_resetFireflies();
 	_resetTimer();
+
 });
 
 subscribe("button/addLeader", function () {
 	_addRandomLeader();
+	logClick("addLeader",'');
 }
 );
 
 subscribe("button/addLeaderClock", function () {
+	logClick("addLeaderClock",'')
 	_addLeaders(1);
 }
 );
 
 subscribe("toggle/followLeader", function (value) {
 	FOLLOW_LEADER = value;
+	logClick("followLeader",value);
 	followLeaderDependencies();
 });
 
 subscribe("toggle/followClock", function (value) {
 	FOLLOW_CLOCK = value;
+	logClick("followClock",value);
 	followClockDependencies();
 });
 
 subscribe("slider/nudgeAmountLeader", function (value) {
 	FLY_PULL_LEADER = value;
+	logClick("nudgeAmountLeader",value);
+	
 });
+
+var logClick = function(name, value){
+	arrayDataClicks[arrayDataClicksCounter] = { Timestamp: new Date().toISOString() , ButtonClicked : name, Value :value};
+	arrayDataClicksCounter++;
+}
 
 var followLeaderDependencies = function () {
 	if (FOLLOW_LEADER) {

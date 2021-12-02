@@ -19,7 +19,7 @@ function writeFile(path, file, data) {
    }
 }
 
-function export_csv(arrayHeader, arrayData, delimiter, fileName) {
+function export_csv(arrayHeader, arrayData, delimiter) {
 	let header = arrayHeader.join(delimiter) + '\n';
 	let csv = header;
 	arrayData.forEach( obj => {
