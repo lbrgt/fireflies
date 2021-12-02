@@ -51,15 +51,14 @@ var _resetConstants = function () {
 	
 };
 
-let arrayHeader = ["Name","Country","Email"];
-let arrayData  = []  
-    arrayData[0] = { name : "Sigit", country : "Indonesia", email : "sigit@gmail.com"};
-    arrayData[1] = { name : "Joana", country : "Brazil", email : "Joana@gmail.com"};
-    arrayData[2] = { name : "Albert", country : "Mexico", email : "albert@gmail.com"};
-    arrayData[3] = { name : "Nuuna", country : "South Korea", email : "Nuuna@gmail.com"};
-    arrayData[4] = { name : "Aroon", country : "Irlandia", email : "aroon@gmail.com"};
+let arrayHeaderClicks = ["Timestamp","ButtonClicked","Value"];
+let arrayHeaderScores = ["Timestamp","Time","Percentage"];
 
-
+let arrayDataClicks  = [] 
+let arrayDataScores = [] 
+var arrayDataClicksCounter = 0;
+var arrayDataScoresCountere =0; 
+var foldername;
 _resetConstants();
 
 /******************************
@@ -78,12 +77,26 @@ var listHelpButton = ["helpLeader", "helpClock", "helpDecentralized"];
 var flashingFF = 0, 
 	prevflashingFF = 0;
 
+window.onbeforeunload = function(e){
+	
+	writeFile(foldername,'clicks.csv',export_csv(arrayHeaderClicks,arrayDataClicks,','));
+	writeFile(foldername,'scores.csv',export_csv(arrayHeaderScores,arrayDataScores,','));
+	e.preventDefault(); // If you prevent default behavior in Mozilla Firefox prompt will always be shown
+	// Chrome requires returnValue to be set
+	e.returnValue = '';
+}
 window.onload = function () {
-	writeFile('','testing.csv',export_csv(arrayHeader,arrayData,',',"testing.csv"));
-
+	//Initialize! 
+	arrayDataClicksCounter = 0;
+	arrayDataScoresCounter = 0;  
+	foldername = new Date().toISOString(); // "2020-06-13T18:30:00.000Z"
+	foldername = foldername.split(':').join('-');
+	
 	elapsedTime = 0;
 	flashingFF = 0;
 	prevflashingFF = 0;
+
+	var timestamp =0; 
 	// Create app!
 	app = new PIXI.Application(document.body.clientWidth, document.body.clientHeight, { autoResize: true, backgroundColor: 0x000000 });
 
@@ -103,9 +116,7 @@ window.onload = function () {
 
 		timeContainer = new TimeText();
 		app.stage.addChild(timeContainer.graphics);
-
 		_setHelpBoxes()
-
 
 		// Animation loop 
 		app.ticker.add(function (delta) {
@@ -120,7 +131,11 @@ window.onload = function () {
 			}
 			flashingFF = Math.max(flashingFF, prevflashingFF);
 			timeContainer.update(delta);
-			//elapsedTime = app.ticker.lastTime/1000;
+			if(app.ticker.lastTime - timestamp >500) {
+				timestamp = app.ticker.lastTime;
+				arrayDataScores[arrayDataScoresCounter] = { Timestamp: new Date().toISOString() , Time : timeContainer.time, Percentage : parseInt(100 * (flashingFF / fireflies.length))};
+				arrayDataScoresCounter++;
+			}
 		});
 
 		// Synchronize 'em!
@@ -708,6 +723,7 @@ var _addRandomLeader = function () {
 // Num of Fireflies
 
 subscribe("slider/numFireflies", function (value) {
+	logClick("numFireflies",value);
 
 	// Settle the difference...
 	if (value > fireflies.length) {
@@ -724,42 +740,51 @@ subscribe("slider/numFireflies", function (value) {
 // Internal Clock
 
 subscribe("toggle/showClocks", function (value) {
+	logClick("showClocks",value);
 	SHOW_CLOCKS = value;
 });
 subscribe("slider/clockSpeed", function (value) {
+	logClick("clockSpeed",value);
 	FLY_CLOCK_SPEED = value
 });
 
 subscribe("slider/leaderRadius", function (value) {
+	logClick("leaderRadius",value);
 	LEADER_RADIUS = value;
 });
 
 // Neighbor Nudge Rule
 subscribe("toggle/neighborNudgeRule", function (value) {
+	logClick("neighborNudgeRule",value);
 	FLY_SYNC = value;
 	flySyncDependencies();
 });
 
 subscribe("slider/nudgeAmount", function (value) {
+	logClick("nudgeAmount",value);
 	FLY_PULL = value;
 });
 
 subscribe("slider/neighborRadius", function (value) {
+	logClick("neighborRadius",value);
 	FLY_RADIUS = value;
 });
 
 // Increase Speed 
 subscribe("slider/changeSwerve", function (value) {
+	logClick("changeSwerve",value);
 	FLY_SWERVE = value;
 });
 
 // Chaos on or off
 subscribe("toggle/chaosON", function (value) {
 	CHAOS_ON = value;
+	logClick("chaosOn",value);
 });
 
 // Reset Fireflies
 subscribe("button/resetFireflies", function () {
+	logClick("resetFireflies",'');
 	_resetFireflies();
 	flashingFF = 0;
 	prevflashingFF = 0;
@@ -770,35 +795,48 @@ subscribe("button/resetFireflies", function () {
 
 //Reset everything 
 subscribe("button/resetEverything", function () {
+	logClick("resetEverything",'');
 	_resetConstants();
 	_syncConstants();
 	_resetFireflies();
 	_resetTimer();
+
 });
 
 subscribe("button/addLeader", function () {
 	_addRandomLeader();
+	logClick("addLeader",'');
 }
 );
 
 subscribe("button/addLeaderClock", function () {
+	logClick("addLeaderClock",'')
 	_addLeaders(1);
 }
 );
 
 subscribe("toggle/followLeader", function (value) {
 	FOLLOW_LEADER = value;
+	logClick("followLeader",value);
 	followLeaderDependencies();
 });
 
 subscribe("toggle/followClock", function (value) {
 	FOLLOW_CLOCK = value;
+	logClick("followClock",value);
 	followClockDependencies();
 });
 
 subscribe("slider/nudgeAmountLeader", function (value) {
 	FLY_PULL_LEADER = value;
+	logClick("nudgeAmountLeader",value);
+	
 });
+
+var logClick = function(name, value){
+	arrayDataClicks[arrayDataClicksCounter] = { Timestamp: new Date().toISOString() , ButtonClicked : name, Value :value};
+	arrayDataClicksCounter++;
+}
 
 var followLeaderDependencies = function () {
 	if (FOLLOW_LEADER) {

@@ -158,7 +158,16 @@
 	//const analytics = getAnalytics(app);
 	console.log("init firebase");
   
+	window.addEventListener('beforeunload', function (e) {
+			console.log("before unload");
+			  // Cancel the event
+			  e.preventDefault(); // If you prevent default behavior in Mozilla Firefox prompt will always be shown
+			  // Chrome requires returnValue to be set
+			  e.returnValue = '';
+			});
   </script>
+
+  
 
 </body>
 
