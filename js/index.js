@@ -790,9 +790,8 @@ subscribe("slider/changeSwerve", function (value) {
 
 // Chaos on or off
 subscribe("toggle/chaosON", function (value) {
-	_resetFireflies();
 	CHAOS_ON = value;
-	logClick("chaosOn",value);
+	logClick("chaosOn",value);chaosON
 });
 
 // Reset Fireflies
