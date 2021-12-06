@@ -22,8 +22,8 @@ var textContent = {
 
     'helpDebug': {
         'title': 'Debug help',
-        'content': `    
-    - Add chaos: when activated, fireflies' clocks close to the mouse (when clicked) are randomly reset
+        'content': `
+    - Add chaos: when activated, you can click in the simulation to randomly reset the fireflies' clocks close to the mouse.
     - Reset fireflies: randomly reset all the internal clocks of the fireflies.
     - Reset everything: randomly reset all clocks and also all parameters.`
     }
