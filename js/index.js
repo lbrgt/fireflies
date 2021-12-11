@@ -80,6 +80,7 @@ var flashingFF = 0,
 window.onbeforeunload = function(e){
 	
 	writeFile(foldername,'clicks.csv',export_csv(arrayHeaderClicks,arrayDataClicks,','));
+	writeFile(foldername,'scores.csv',export_csv(arrayHeaderScores,arrayDataScores,','));
 	e.preventDefault(); // If you prevent default behavior in Mozilla Firefox prompt will always be shown
 	// Chrome requires returnValue to be set
 	e.returnValue = '';
