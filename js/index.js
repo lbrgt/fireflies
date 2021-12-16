@@ -1,3 +1,5 @@
+//const { Console } = require("console");
+
 /******************************
 
 PRE-LOAD THESE PUPPIES 
@@ -27,7 +29,9 @@ var NUM_FIREFLIES,
 	FOLLOW_LEADER,
 	FOLLOW_CLOCK,
 	LEADER_RADIUS,
-	CHAOS_ON;
+	CHAOS_ON,
+	BLOCKED_CLOCK,
+	ROBUST_TEST; 
 
 var boxwidth, boxheight, marginwidth, marginheight, elapsedTime, prevflashingFF, flashingFF;
 
@@ -48,6 +52,8 @@ var _resetConstants = function () {
 	MOUSE_RADIUS = 200;
 	flashingFF = 0;
 	prevflashingFF = 0;
+	BLOCKED_CLOCK = false;
+	ROBUST_TEST = true;
 	
 };
 
@@ -69,6 +75,7 @@ THE MAIN GAME CODE
 
 var app;
 var fireflies = [];
+var firefliesLeaders= [];
 var leaders = [];
 var timeContainer;
 
@@ -76,6 +83,8 @@ var listHelpButton = ["helpLeader", "helpClock", "helpDecentralized", "helpDebug
 
 var flashingFF = 0, 
 	prevflashingFF = 0;
+
+var blocked_clock ; 
 
 window.onbeforeunload = function(e){
 	
@@ -116,7 +125,13 @@ window.onload = function () {
 
 		timeContainer = new TimeText();
 		app.stage.addChild(timeContainer.graphics);
+		blocked_clock = createHelpBox(content ='A disturbance occured! A clock, a leader or a firefly might be broken. The fireflies are disturbed. Is this strategy robust? Will they synchronize again?  ',title = 'OUPS! DISTURBANCE!');
+		blocked_clock.x = app.renderer.width/2 - blocked_clock.width/2;
+		blocked_clock.y = app.renderer.height/2- blocked_clock.height/2;
+		
+		
 		_setHelpBoxes()
+
 
 		// Animation loop 
 		app.ticker.add(function (delta) {
@@ -127,14 +142,19 @@ window.onload = function () {
 			}
 			for (var i = 0; i < fireflies.length; i++) {
 				fireflies[i].update(delta);
-				if (fireflies[i].clock == 0) flashingFF += 1;
+				if (fireflies[i].clock < 0.01) flashingFF += 1;
 			}
 			flashingFF = Math.max(flashingFF, prevflashingFF);
+			//if(prevflashingFF == 0 ) console.log("zero prev ff");
+
 			timeContainer.update(delta);
 			if(app.ticker.lastTime - timestamp >500) {
 				timestamp = app.ticker.lastTime;
-				arrayDataScores[arrayDataScoresCounter] = { Timestamp: new Date().toISOString() , Time : timeContainer.time, Percentage : parseInt(100 * (flashingFF / fireflies.length))};
+				arrayDataScores[arrayDataScoresCounter] = { Timestamp: new Date().toISOString() , Time : timeContainer.time, Percentage : parseInt(100 * (flashingFF / (fireflies.length-1)))};
 				arrayDataScoresCounter++;
+			}
+			if(ROBUST_TEST && flashingFF/fireflies.length>0.7){
+				blockedClock(true);
 			}
 		});
 
@@ -156,7 +176,51 @@ window.onload = function () {
 	Widgets.convert($("#words"));
 	Widgets.convert($("#strategies"));
 };
+var blockedClock= function(activate){
+	if(activate){
+		ROBUST_TEST = false; 
+		app.stage.addChild(blocked_clock);
+		if(FOLLOW_CLOCK) 
+			BLOCKED_CLOCK = true; 
+		else if(FOLLOW_LEADER) {
+			var i = Math.floor(Math.random() * (firefliesLeaders.length));
+			var ff = firefliesLeaders[i];
+			ff.blocked = true; 
+		}
+		else if(FLY_SYNC){
+			var i = Math.floor(Math.random() * (fireflies.length));
+			var ff = fireflies[i];
+			ff.blocked = true; 
+		}
+		for (var i = 0; i < parseInt(fireflies.length/4); i++) {
+			var ff = fireflies[i];
+			ff.clock = Math.random();
+		}
+		flashingFF = 0;
+		prevflashingFF = 0;
+		
+	}
+	else{
+		ROBUST_TEST = true; 
 
+		if(FOLLOW_CLOCK) 
+			BLOCKED_CLOCK = false; 
+		else if(FOLLOW_LEADER) {
+			for (var i = 0; i < firefliesLeaders.length; i++) {
+				var ff = firefliesLeaders[i];
+				ff.blocked = false; 
+			}
+		}
+		else if(FLY_SYNC){
+			for (var i = 0; i < fireflies.length; i++) {
+				var ff = fireflies[i];
+				ff.blocked = false; 
+			}
+		}
+		app.stage.removeChild(blocked_clock);
+	}
+
+}
 
 var _setHelpBoxes = function () {
 	for (var i = 0; i < listHelpButton.length; i++) {
@@ -326,6 +390,7 @@ var _resetFireflies = function () {
 		var ff = fireflies[i];
 		ff.clock = Math.random();
 	}
+	blockedClock(false);
 };
 
 var _resetTimer = function () {
@@ -393,7 +458,7 @@ function TimeText() {
 	self.graphics.addChild(timeText);
 	self.update = function (delta) {
 		self.time = app.ticker.lastTime / 1000 - elapsedTime;
-		timeText.text = 'Time elapsed:  ' + pad2(parseInt(self.time / 60)) + ':' + pad2(parseInt(self.time % 60)) + ', Maximum flashing fireflies together:  ' + parseInt(100 * (flashingFF / fireflies.length)) + ' % ';
+		timeText.text = 'Time elapsed:  ' + pad2(parseInt(self.time / 60)) + ':' + pad2(parseInt(self.time % 60)) + ', Maximum flashing fireflies together:  ' + parseInt(100 * (flashingFF / (fireflies.length -1 ))) + ' % ';
 		timeText.x = app.renderer.width / 2 - timeText.width/2 ;
 		style.wordWrapWidth = app.renderer.width / 2
 	}
@@ -475,6 +540,7 @@ function Firefly() {
 
 	self.color = 16777215;
 	self.leaderShowClock = false;
+	self.blocked = false; 
 
 	// Mouse LAST pressed... a little decay...
 	var _chaos = 0;
@@ -516,7 +582,7 @@ function Firefly() {
 
 		// Increment cycle
 		flash.alpha *= 0.9;
-		self.clock += (delta / 60) * FLY_CLOCK_SPEED;
+		if(!self.blocked) self.clock += (delta / 60) * FLY_CLOCK_SPEED;
 
 		// If near mouse, get chaotic, and fast!
 		if (Mouse.pressed && CHAOS_ON) {
@@ -657,7 +723,7 @@ function Leader() {
 		// Increment cycle
 
 		flash.alpha *= 0.9;
-		self.clock += (delta / 60) * FLY_CLOCK_SPEED;
+		if(!BLOCKED_CLOCK) self.clock += (delta / 60) * FLY_CLOCK_SPEED;
 
 		if (Mouse.pressed) {
 			if (closeEnough(self, Mouse, 50)) {
@@ -740,8 +806,10 @@ var _syncConstants = function () {
 var _addRandomLeader = function () {
 	var i = Math.floor(Math.random() * (fireflies.length));
 	var ff = fireflies[i];
+	firefliesLeaders.push(ff);
 	ff.color = 16711680;
 	ff.leaderShowClock = true;
+	_resetFireflies();
 }
 
 // Num of Fireflies
@@ -842,6 +910,7 @@ subscribe("button/addLeader", function () {
 subscribe("button/addLeaderClock", function () {
 	logClick("addLeaderClock",'')
 	_addLeaders(1);
+	_resetFireflies();
 }
 );
 
@@ -860,6 +929,7 @@ subscribe("toggle/followClock", function (value) {
 subscribe("slider/nudgeAmountLeader", function (value) {
 	FLY_PULL_LEADER = value;
 	logClick("nudgeAmountLeader",value);
+	_resetFireflies();
 	
 });
 
@@ -869,6 +939,7 @@ var logClick = function(name, value){
 }
 
 var followLeaderDependencies = function () {
+	blockedClock(false);
 	if (FOLLOW_LEADER) {
 		$("#nudgeAmountLeader").removeAttribute("inactive");
 		$("#addLeader").removeAttribute("inactive");
@@ -889,6 +960,7 @@ var followLeaderDependencies = function () {
 }
 
 var followClockDependencies = function () {
+	blockedClock(false);
 	if (FOLLOW_CLOCK) {
 		$("#leaderRadius").removeAttribute("inactive");
 		FOLLOW_LEADER = false;
@@ -896,11 +968,14 @@ var followClockDependencies = function () {
 		publish("toggle/neighborNudgeRule", [FLY_SYNC]);
 		publish("toggle/followLeader", [FOLLOW_LEADER]);
 	}
-	else
+	else{
 		$("#leaderRadius").setAttribute("inactive", "yes");
+	}
+		
 }
 
-var flySyncDependencies = function () {
+var flySyncDependencies = function () {		blockedClock(false);
+	blockedClock(false);
 	if (FLY_SYNC) {
 		$("#nudgeAmount").removeAttribute("inactive");
 		$("#neighborRadius").removeAttribute("inactive");
