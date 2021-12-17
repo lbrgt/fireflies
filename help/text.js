@@ -2,7 +2,8 @@ var textContent = {
     'helpLeader': {
         'title': 'Follow leader(s)',
         'content': `
-        In this strategy, a certain number of fireflies are selected to be local leaders. Fireflies close to them will adapt their cycle accordingly. 
+        In this strategy, a certain number of fireflies are selected to be local leaders. Fireflies close to them will adapt their cycle accordingly.
+        The adaptation is: when you see a leader flash, nudge your clock forward.  
         You can add more leaders.
         You can select how much the fireflies will adapt per cycle.`
 
@@ -16,6 +17,7 @@ var textContent = {
     'helpDecentralized': {
         'title': 'Decentralized behavior',
         'content': `In this strategy, individual fireflies adapt their behavior to local neighbors.
+        The rule a firefly follows is : when you see a nearby firefly flash, nudge your clock forward.
         You can change the radius of influence of an individual fireflies.
         You can select how much the fireflies will adapt per cycle.`
     },

@@ -128,7 +128,9 @@ window.onload = function () {
 		blocked_clock = createHelpBox(content ='A disturbance occured! A clock, a leader or a firefly might be broken. The fireflies are disturbed. Is this strategy robust? Will they synchronize again?  ',title = 'OUPS! DISTURBANCE!');
 		blocked_clock.x = app.renderer.width/2 - blocked_clock.width/2;
 		blocked_clock.y = app.renderer.height/2- blocked_clock.height/2;
-		
+		blocked_clock.name = "blockedText";
+		//blocked_clock.visible = false; 
+		//app.stage.addChild(blocked_clock);
 		
 		_setHelpBoxes()
 
@@ -153,7 +155,9 @@ window.onload = function () {
 				arrayDataScores[arrayDataScoresCounter] = { Timestamp: new Date().toISOString() , Time : timeContainer.time, Percentage : parseInt(100 * (flashingFF / (fireflies.length-1)))};
 				arrayDataScoresCounter++;
 			}
-			if(ROBUST_TEST && flashingFF/fireflies.length>0.7){
+			var anystrategy_on = FOLLOW_CLOCK|FOLLOW_LEADER|FLY_SYNC;
+			console.log(anystrategy_on)
+			if(anystrategy_on && ROBUST_TEST && flashingFF/fireflies.length>0.7){
 				blockedClock(true);
 			}
 		});
@@ -179,7 +183,9 @@ window.onload = function () {
 var blockedClock= function(activate){
 	if(activate){
 		ROBUST_TEST = false; 
+		//blocked_clock.visible = true; 
 		app.stage.addChild(blocked_clock);
+		console.log("add child");
 		if(FOLLOW_CLOCK) 
 			BLOCKED_CLOCK = true; 
 		else if(FOLLOW_LEADER) {
@@ -217,6 +223,9 @@ var blockedClock= function(activate){
 				ff.blocked = false; 
 			}
 		}
+		//blocked_clock.visible = false; 
+		//console.log("blocked name is : "+ blocked_clock.name);
+		//console.log("the object is" + app.stage.getChildByName(blocked_clock.name))
 		app.stage.removeChild(blocked_clock);
 	}
 
@@ -282,6 +291,7 @@ function createHelpBox(content, title) {
 	closeButton.on('click', onClick);
 
 	function onClick() {
+		//helpContainer.visible = false; 
 		app.stage.removeChild(helpContainer)
 	}
 
